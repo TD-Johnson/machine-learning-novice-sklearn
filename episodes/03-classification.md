@@ -258,6 +258,37 @@ Earlier we saw that the `max_depth=2` model split the data into 3 simple boundin
 
 This is a classic case of over-fitting - our model has produced extremely specific parameters that work for the training data but are not representitive of our test data. Sometimes simplicity is better!
 
+### Overfitting at max depth = 5
+
+Lets take a look at this overfitting in more detail. We can do this by plotting a classification boundary plot with the training data and comparing it to the same plot but with the testing data.
+
+```python
+fig, axes = plt.subplots(1, 2, figsize=(18, 7))
+
+# Define the desired order for species categories to control 'husl' palette mapping
+desired_species_order = ['Gentoo', 'Adelie', 'Chinstrap']
+
+# Convert y_test to a Categorical type with the specified order
+y_test_ordered = pd.Categorical(y_test, categories=desired_species_order, ordered=True)
+
+d_train = DecisionBoundaryDisplay.from_estimator(clf, X_train[[f1, f2]], ax=axes[0])
+sns.scatterplot(data = X_train, x=f1, y=f2, hue=y_train, palette='husl', ax=axes[0])
+axes[0].set_title('Train')
+
+d_test = DecisionBoundaryDisplay.from_estimator(clf, X_train[[f1, f2]], ax=axes[1])
+sns.scatterplot(data = X_test, x=f1, y=f2, hue=y_test_ordered, palette='husl', ax=axes[1]) # Use the reordered y_test
+axes[1].set_title('Test')
+
+plt.tight_layout()
+plt.show()
+```
+![](fig/e3_dt_comparison.png){alt='Comparison of training and test data in the decision space'}
+
+The plot on the left is identical to the one we have previously plotted. We can see that the decision tree has created some very specific boundaries that allow it to correctly classify individual values. For example we can see that the decision tree has created a boundary to classify a few individuals in the Adelie species with a body mass of roughly 4250g and a bill length of roughly 47mm.
+
+The problem of overfitting occurs because our test data is not identical to our training data. If we take a look at the plot on the right we can see that the two individuals from the Adelie species are no longer present. Instead we can see that the decision tree is now incorrectly classifying a member of the Chinstrap species as Adelie, because it has a similar bill length and body mass. Instead of capturing only the underlying patterns in the data, the model has also captured some of the noise. In future, we should be suspicious when we see decision boundaries that capture only single, or a few, values.
+
+
 > ### Exercise: Bias-Variance tradeoff (optional)
 > 
 > Typically, as we initially transition from simple to more complex models (e.g., depth of 1 -> 2), we'll see an increase in model performance (test set accuracy). However, beyond a certain point of complexity, the model will be more prone to overfitting effects. This is known as the "U-shaped" Bias-Variance tradeoff, where "bias" represents prediction error from models being too simple, and "variance" represents prediciton errors from models' being too complex. This is because more complicated models begin to memorize the noise in the training data rather than capture underlying patterns in the data. What happens as we continue to add depth to our tree?
